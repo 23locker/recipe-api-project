@@ -21,7 +21,7 @@ class IngredientService:
                 "proteion_per_100g": ingredient.protein_per_100g,
                 "fat_per_100g": ingredient.fat_per_100g,
                 "carbs_per_100g": ingredient.carbs_per_100g,
-                "category_id": ingredient.category_id,
+                "category_id": ingredient.category,
             }
         except DoesNotExist:
             return None
@@ -68,12 +68,14 @@ class IngredientService:
 
         result = []
         for substitute in substitutes:
-            sub_ingredient = await Ingredient.get(id=substitute.subtitutes_ingridient)
+            sub_ingredient = await Ingredient.get(
+                id=substitute.subtitutes_ingredient_id
+            )
             result.append(
                 {
                     "id": substitute.id,
-                    "original_ingredient_id": substitute.original_ingredient_id,
-                    "substitute_ingredient_id": substitute.substitute_ingredient_id,
+                    "original_ingredient_id": substitute.original_ingredient,
+                    "substitute_ingredient_id": substitute.subtitutes_ingredient_id,
                     "substitute_name": sub_ingredient.name,
                     "coefficient": substitute.coefficient,
                 }

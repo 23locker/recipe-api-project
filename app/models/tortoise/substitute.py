@@ -3,20 +3,17 @@ from pydoc import describe
 from tortoise import Model, fields
 
 
-class Subtitute(Model):
+class Substitute(Model):
     id = fields.IntField(pk=True)
-    original_ingridient: fields.ForeignKeyRelation["Ingredient"] = (
-        fields.ForeignKeyField(
-            "models.Ingridient",
-            related_name="subtitues",
-        )
+    original_ingredient = fields.ForeignKeyField(
+        "models.Ingredient", related_name="substitutes_from"
     )
-    subtitutes_ingridient_id: fields.ForeignKeyRelation["Ingredient"] = (
-        fields.ForeignKeyField("models.ingridient")
+    substitute_ingredient = fields.ForeignKeyField(
+        "models.Ingredient", related_name="substitutes_to"
     )
-    coefficient = fields.FloatField(description="Коэффициент замены от 0 до 3")
+    coefficient = fields.FloatField()
     created_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:
-        table = "subtitutes"
-        unique_together = (("original_ingridient", "subtitute_ingridient"),)
+        table = "substitutes"
+        unique_together = (("original_ingredient", "substitute_ingredient"),)

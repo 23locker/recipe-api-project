@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 class StoreProduct(BaseModel):
     id: Optional[str] = Field(alias="_id")
-    ingridient_id: int
+    ingredient_id: int
     name: str
     price: float
     source: str = "Пятерочка"

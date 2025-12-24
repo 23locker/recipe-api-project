@@ -1,13 +1,13 @@
 from pydantic_settings import BaseSettings
 
 
-class Settings:
+class Settings(BaseSettings):
     # PostgreSQL
     DATABASE_URL: str
 
     # MongoDB
-    MONGODB_URL: str =
-    MONGODB_DB: str =
+    MONGODB_URL: str
+    MONGODB_DB: str
 
     # JWT
     SECRET_KEY: str
@@ -19,5 +19,6 @@ class Settings:
 
     class Config:
         env_file = ".env"
+
 
 settings = Settings()

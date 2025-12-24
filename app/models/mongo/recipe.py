@@ -1,6 +1,5 @@
 from datetime import datetime
 from multiprocessing.managers import BaseManager
-from types import ClassMethodDescriptorType
 from typing import List, Optional
 
 from bson import ObjectId
@@ -25,8 +24,8 @@ class PyObjectId(ObjectId):
         return json_schema
 
 
-class RecipeIngridient(BaseModel):
-    ingridient_id: int
+class RecipeIngredient(BaseModel):
+    ingredient_id: int
     quantity: float
     unit: str = "g"
     calories: float

@@ -5,7 +5,7 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
 
 from app.db.mongodb import get_mongodb
-from app.models.mongo.recipe import Recipe, RecipeIngridient, RecipeUnstruction
+from app.models.mongo.recipe import Recipe, RecipeIngredient, RecipeUnstruction
 from app.services.ingredient_service import IngredientService
 
 

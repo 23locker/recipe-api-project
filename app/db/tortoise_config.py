@@ -3,15 +3,18 @@ from tortoise import Tortoise
 from app.config import settings
 
 TORTOISE_ORM = {
-    "connection": {"default": settings.DATABASE_URL},
+    "connections": {"default": settings.DATABASE_URL},
     "apps": {
-        "models": [
-            "app.models.tortoise.user",
-            "app.models.tortoise.category",
-            "app.models.tortoise.ingredient",
-            "app.models.tortoise.substitute",
-        ],
-        "default_connection": "default",
+        "models": {
+            "models": [
+                "app.models.tortoise.user",
+                "app.models.tortoise.category",
+                "app.models.tortoise.ingredient",
+                "app.models.tortoise.substitute",
+                "aerich.models",
+            ],
+            "default_connection": "default",
+        }
     },
 }
 
