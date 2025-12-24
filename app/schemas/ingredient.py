@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class IngridientCreate(BaseModel):
+class IngredientCreate(BaseModel):
     name: str
     calories_per_100g: float
     protein_per_100g: float
@@ -12,7 +12,7 @@ class IngridientCreate(BaseModel):
     category_id: int
 
 
-class IngridientResponse(BaseModel):
+class IngredientResponse(BaseModel):
     id: int
     name: str
     calories_per_100g: float

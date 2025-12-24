@@ -4,15 +4,15 @@ from pydantic import BaseModel, Field
 
 
 class SubtituteCreate(BaseModel):
-    original_ingridient_id: int
-    subtitute_ingridient_id: int
+    original_ingredient_id: int
+    subtitute_ingredient_id: int
     coefficient: float = Field(gt=0, le=3)
 
 
 class SubtituteResponse(BaseModel):
     id: int
-    original_ingridient_id: int
-    subtitute_ingridient_id: int
+    original_ingredient_id: int
+    subtitute_ingredient_id: int
     coefficient: int
     created_at: datetime
 

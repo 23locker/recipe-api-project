@@ -1,18 +1,17 @@
 from datetime import datetime
 from typing import List, Optional
 
-from annotated_types import BaseMetadata
 from pydantic import BaseModel
 
 
 class RecipeIngredientCreate(BaseModel):
-    ingridient_id: int
+    ingredient_id: int
     quantity: float
     unit: str = "g"
 
 
 class RecipeIngredientResponse(BaseModel):
-    ingridient_id: int
+    ingredient_id: int
     quantity: float
     unit: str
     calories: float
@@ -40,7 +39,7 @@ class RecipeCreate(BaseModel):
     cook_time_minutes: int
     portions: int
     difficulty: str = "easy"
-    ingridients: List[RecipeIngredientCreate]
+    ingredients: List[RecipeIngredientCreate]
     instructions: List[RecipeInstructionCreate]
 
 
