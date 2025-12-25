@@ -1,5 +1,4 @@
 from fastapi import HTTPException, status
-from tortoise.exceptions import DoesNotExist
 
 from app.models.tortoise.category import Category
 from app.schemas.category import CategoryCreate, CategoryUpdate

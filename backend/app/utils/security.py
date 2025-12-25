@@ -42,7 +42,7 @@ def create_access_token(data: Dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-async def verify_token(token: str = Depends(oauth2_scheme)) -> Dict:
+async def verify_token(token: str = Depends(oauth2_scheme)) -> int:
     """Проверить JWT токен"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -52,14 +52,16 @@ async def verify_token(token: str = Depends(oauth2_scheme)) -> Dict:
 
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
         )
-        user_id = payload.get("user_id")
 
+        user_id: str | None = payload.get("user_id")
         if user_id is None:
             raise credentials_exception
 
-        return {"user_id": user_id}
+        return int(user_id)
 
     except JWTError:
         raise credentials_exception

@@ -5,12 +5,12 @@ from app.models.tortoise.user import User
 from app.utils.security import verify_token
 
 
-async def get_current_user(token: dict = Depends(verify_token)) -> User:
+async def get_current_user(user_id: int = Depends(verify_token)) -> User:
     """
     Получить текущего пользователя по JWT токену
     """
     try:
-        user = await User.get(id=token["user_id"])
+        user = await User.get(id=user_id)
 
         if not user.is_active:
             raise HTTPException(

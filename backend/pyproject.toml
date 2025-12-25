@@ -17,6 +17,7 @@ dependencies = [
     "pydantic[email]>=2.12.5",
     "pytest>=9.0.2",
     "python-jose>=3.5.0",
+    "python-multipart>=0.0.21",
     "redis>=7.1.0",
     "tortoise-orm>=0.25.2",
     "uvicorn>=0.40.0",
