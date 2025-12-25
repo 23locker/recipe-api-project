@@ -1,14 +1,26 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+# Python
+backend/.venv
+backend/__pycache__/
+backend/*.pyc
+backend/build/
+backend/dist/
+backend/*.egg-info
 
-# Virtual environments
-.venv
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
 
+# Environment
 .env
+.env.local
 
-.pytest_cache
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
