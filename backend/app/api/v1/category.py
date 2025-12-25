@@ -1,13 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.dependencies import get_admin_user, get_current_user
-from app.models.tortoise.category import Category
 from app.models.tortoise.user import User
-from app.schemas.category import CategoryCreate, CategoryResponse
+from app.schemas.category import CategoryCreate, CategoryResponse, ListCategoryResponse
 from app.services.category_service import CategoryService
 
 router = APIRouter()
 service = CategoryService()
+
+
+@router.get(
+    "",
+    response_model=ListCategoryResponse,
+)
+async def get_all_categories():
+    return await service.get_all_categories()
 
 
 @router.post(

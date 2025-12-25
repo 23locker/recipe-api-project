@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -22,3 +22,8 @@ class CategoryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ListCategoryResponse(BaseModel):
+    items: List[CategoryResponse]
+    total: int
