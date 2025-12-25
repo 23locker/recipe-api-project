@@ -8,12 +8,15 @@ _db: AsyncIOMotorDatabase = None
 
 async def init_mongodb():
     global _client, _db
-    _client = AsyncIOMotorClient(settings.MONGODB_URL)
-    _db = _client[settings.MONGODB_DB]
-    print(f"✅ Connected to MongoDB - {settings.MONGODB_DB}")
+    if _db is None:
+        _client = AsyncIOMotorClient(settings.MONGODB_URL)
+        _db = _client[settings.MONGODB_DB]
+        print(f"✅ Connected to MongoDB - {settings.MONGODB_DB}")
 
 
 async def get_mongodb() -> AsyncIOMotorDatabase:
+    if _db is None:
+        await init_mongodb()
     return _db
 
 

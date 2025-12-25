@@ -3,13 +3,13 @@ from typing import Any, Dict, List, Optional
 from tortoise.exceptions import DoesNotExist
 
 from app.models.tortoise.ingredient import Ingredient
-from app.models.tortoise.substitute import Subtitute
+from app.models.tortoise.substitute import Substitute
 
 
 class IngredientService:
     async def get_ingredient(self, ingredient_id: int) -> Optional[Dict[str, Any]]:
         """
-        Получить ингридиент по ID
+        Получить ингредиент по ID
         """
         try:
             ingredient = await Ingredient.get(id=ingredient_id)
@@ -18,10 +18,11 @@ class IngredientService:
                 "id": ingredient.id,
                 "name": ingredient.name,
                 "calories_per_100g": ingredient.calories_per_100g,
-                "proteion_per_100g": ingredient.protein_per_100g,
+                "protein_per_100g": ingredient.protein_per_100g,
                 "fat_per_100g": ingredient.fat_per_100g,
                 "carbs_per_100g": ingredient.carbs_per_100g,
-                "category_id": ingredient.category,
+                "category_id": ingredient.category_id,
+                "created_at": ingredient.created_at,
             }
         except DoesNotExist:
             return None
@@ -38,17 +39,33 @@ class IngredientService:
             try:
                 cursor_id = int(cursor)
                 query = query.filter(id__gt=cursor_id)
-            except:
+            except Exception:
                 pass
 
         ingredients = await query.order_by("id").limit(size + 1)
 
         has_more = len(ingredients) > size
+        next_cursor = None
         if ingredients and has_more:
             next_cursor = str(ingredients[-1].id)
+            ingredients = ingredients[:-1] # Remove the extra item used for has_more
+
+        # Convert to dicts for serialization
+        data = []
+        for ing in ingredients:
+            data.append({
+                "id": ing.id,
+                "name": ing.name,
+                "calories_per_100g": ing.calories_per_100g,
+                "protein_per_100g": ing.protein_per_100g,
+                "fat_per_100g": ing.fat_per_100g,
+                "carbs_per_100g": ing.carbs_per_100g,
+                "category_id": ing.category_id,
+                "created_at": ing.created_at,
+            })
 
         return {
-            "data": ingredients,
+            "data": data,
             "next_cursor": next_cursor,
             "has_more": has_more,
         }
@@ -60,24 +77,23 @@ class IngredientService:
         ingredient = await Ingredient.create(**ingredient_data)
         return ingredient
 
-    async def get_subtitutes(self, ingredient_id: int) -> List[Dict[str, Any]]:
+    async def get_substitutes(self, ingredient_id: int) -> List[Dict[str, Any]]:
         """
         Получить ВСЕ замены ингредиента
         """
-        substitutes = await Subtitute.filter(original_ingredient_id=ingredient_id)
+        substitutes = await Substitute.filter(original_ingredient_id=ingredient_id)
 
         result = []
         for substitute in substitutes:
-            sub_ingredient = await Ingredient.get(
-                id=substitute.subtitutes_ingredient_id
-            )
+            sub_ingredient = await Ingredient.get(id=substitute.substitute_ingredient_id)
             result.append(
                 {
                     "id": substitute.id,
-                    "original_ingredient_id": substitute.original_ingredient,
-                    "substitute_ingredient_id": substitute.subtitutes_ingredient_id,
+                    "original_ingredient_id": substitute.original_ingredient_id,
+                    "substitute_ingredient_id": substitute.substitute_ingredient_id,
                     "substitute_name": sub_ingredient.name,
                     "coefficient": substitute.coefficient,
+                    "created_at": substitute.created_at,
                 }
             )
 
@@ -88,20 +104,39 @@ class IngredientService:
         Получаем первую замену для ингредиента
         """
         try:
-            subtitute = await Subtitute.filter(original_ingredient_id=ingredient_id)
-            if subtitute:
+            substitute = await Substitute.filter(original_ingredient_id=ingredient_id).first()
+            if substitute:
                 return {
-                    "original_ingredient_id": subtitute.original_ingredient_id,
-                    "subtitute_ingredient_id": subtitute.subtitute_ingredient_id,
-                    "coefficient": subtitute.coefficient,
+                    "original_ingredient_id": substitute.original_ingredient_id,
+                    "substitute_ingredient_id": substitute.substitute_ingredient_id,
+                    "coefficient": substitute.coefficient,
                 }
             return None
-        except:
+        except Exception:
             return None
 
-    async def create_subtitute(self, subtitute_data: Dict[str, Any]) -> Subtitute:
+    async def create_substitute(self, substitute_data: Dict[str, Any]) -> Substitute:
         """
         Создание замены
         """
-        subtitute = await Subtitute.create(**subtitute_data)
-        return subtitute
+        orig_id = substitute_data["original_ingredient_id"]
+        sub_id = substitute_data["substitute_ingredient_id"]
+
+        if orig_id == sub_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ingredient cannot be a substitute for itself",
+            )
+
+        # Проверка существования обоих ингредиентов
+        orig_exists = await Ingredient.exists(id=orig_id)
+        sub_exists = await Ingredient.exists(id=sub_id)
+
+        if not orig_exists or not sub_exists:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="One or both ingredients do not exist",
+            )
+
+        substitute = await Substitute.create(**substitute_data)
+        return substitute

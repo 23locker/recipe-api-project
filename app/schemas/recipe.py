@@ -49,7 +49,7 @@ class RecipeResponse(BaseModel):
     description: str
     category_id: int
     cook_time_minutes: int
-    porttions: int
+    portions: int
     difficulty: str
     ingredients: List[RecipeIngredientResponse]
     instructions: List[RecipeInstructionResponse]

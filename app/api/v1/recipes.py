@@ -132,7 +132,7 @@ async def get_recipe_with_substitutes(
         ]
     }
     """
-    recipe = await recipe_service.get_recipe_with_subtitutes(
+    recipe = await recipe_service.get_recipe_with_substitutes(
         recipe_id=recipe_id, unavailable_ingredients=unavailable_ingredients
     )
 

@@ -14,9 +14,15 @@ class AuthService:
         Регистрация нового пользователя
         """
         try:
-            await User.get(username=username)
-            return None
-        except DoesNotExist:
+            # Проверка на существование username или email
+            existing_user = await User.filter(username=username).first()
+            if existing_user:
+                return None
+            
+            existing_email = await User.filter(email=email).first()
+            if existing_email:
+                return None
+
             user = await User.create(
                 username=username,
                 email=email,
@@ -24,6 +30,8 @@ class AuthService:
                 role="user",
             )
             return user
+        except Exception:
+            return None
 
     async def login_user(
         self, username: str, password: str

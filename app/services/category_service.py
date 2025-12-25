@@ -1,65 +1,48 @@
-from typing import Any, Dict, List, Optional
-
+from fastapi import HTTPException, status
 from tortoise.exceptions import DoesNotExist
 
 from app.models.tortoise.category import Category
-from app.schemas.category import CategoryCreate, CategoryResponse
+from app.schemas.category import CategoryCreate, CategoryUpdate
 
 
 class CategoryService:
-    async def create_category(self, category_data: Dict[str, Any]) -> Dict[str, Any]:
-        category = await Category.create(**category_data)
-        return {
-            "id": category.id,
-            "name": category.name,
-            "description": category.description,
-            "created_at": category.created_at,
-        }
+    async def create_category(self, data: CategoryCreate) -> Category:
+        exists = await Category.get_or_none(name=data.name)
+        if exists:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Category with this name already exists",
+            )
 
-    async def get_category(self, category_id: int) -> Optional[Dict[str, Any]]:
-        try:
-            category = await Category.get(id=category_id)
-            return {
-                "id": category.id,
-                "name": category.name,
-                "description": category.description,
-                "created_at": category.created_at,
-            }
-        except DoesNotExist:
-            return None
+        return await Category.create(**data.dict())
 
-    async def get_all_categories(self) -> List[Dict[str, Any]]:
-        categories = await Category.all()
-        return [
-            {
-                "id": category.id,
-                "name": category.name,
-                "description": category.description,
-                "created_at": category.created_at,
-            }
-            for category in categories
-        ]
+    async def get_category(self, category_id: int) -> Category | None:
+        return await Category.get_or_none(id=category_id)
+
+    async def get_all_categories(self) -> list[Category]:
+        return await Category.all()
 
     async def update_category(
-        self, category_id: int, category_data: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
-        try:
-            category = await Category.get(id=category_id)
-            await category.update_from_dict(category_data)
-            await category.save()
-            return {
-                "id": category.id,
-                "name": category.name,
-                "description": category.description,
-                "created_at": category.created_at,
-            }
-        except DoesNotExist:
+        self,
+        category_id: int,
+        data: CategoryUpdate,
+    ) -> Category | None:
+        category = await Category.get_or_none(id=category_id)
+        if not category:
             return None
 
+        if data.name and data.name != category.name:
+            exists = await Category.get_or_none(name=data.name)
+            if exists:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Category with this name already exists",
+                )
+
+        category.update_from_dict(data.dict(exclude_unset=True))
+        await category.save()
+        return category
+
     async def delete_category(self, category_id: int) -> bool:
-        try:
-            category = await Category.get(id=category_id)
-            await category.delete()
-            return True
-        except DoesNotExist:
-            return False
+        deleted_count = await Category.filter(id=category_id).delete()
+        return deleted_count > 0

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.dependencies import get_current_user
+from app.dependencies import get_admin_user
 from app.models.tortoise.user import User
 
 router = APIRouter()

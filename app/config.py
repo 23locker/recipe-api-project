@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str
 
+    # env
+    ENV: str = "prod"
+
     class Config:
         env_file = ".env"
 

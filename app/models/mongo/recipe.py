@@ -34,7 +34,7 @@ class RecipeIngredient(BaseModel):
     carbs: float
 
 
-class RecipeUnstruction(BaseModel):
+class RecipeInstruction(BaseModel):
     step: int
     description: str
     time_minutes: Optional[int] = None
@@ -48,8 +48,8 @@ class Recipe(BaseModel):
     cook_time_minutes: int
     portions: int
     difficulty: str = "easy"
-    ingredients: List[RecipeIngridient]
-    instructions: List[RecipeUnstruction]
+    ingredients: List[RecipeIngredient]
+    instructions: List[RecipeInstruction]
     total_calories: float
     total_protein: float
     total_fat: float

@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from fastapi import HTTPException, status
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
 
 from app.db.mongodb import get_mongodb
-from app.models.mongo.recipe import Recipe, RecipeIngredient, RecipeUnstruction
+from app.models.mongo.recipe import Recipe, RecipeIngredient, RecipeInstruction
 from app.services.ingredient_service import IngredientService
 
 
@@ -16,7 +17,7 @@ class RecipeService:
         self.ingredient_service = IngredientService()
 
     async def _get_collection(self):
-        if not self.collection:
+        if self.collection is None:
             self.db = await get_mongodb()
             self.collection = self.db.recipes
         return self.collection
@@ -57,7 +58,7 @@ class RecipeService:
         if cursor:
             try:
                 filters["_id"] = {"$gt": ObjectId(cursor)}
-            except:
+            except Exception:
                 pass
 
         recipes = (
@@ -75,6 +76,10 @@ class RecipeService:
         if recipes and has_more:
             next_cursor = str(recipes[-1]["_id"])
 
+        # Convert _id to id for serialization
+        for recipe in recipes:
+            recipe["id"] = str(recipe.pop("_id"))
+
         return {
             "data": recipes,
             "next_cursor": next_cursor,
@@ -89,8 +94,10 @@ class RecipeService:
 
         try:
             recipe = await collection.find_one({"_id": ObjectId(recipe_id)})
+            if recipe:
+                recipe["id"] = str(recipe.pop("_id"))
             return recipe
-        except:
+        except Exception:
             return None
 
     async def create_recipe(self, recipe_data: Dict[str, Any]) -> dict:
@@ -110,6 +117,12 @@ class RecipeService:
             ing_data = await self.ingredient_service.get_ingredient(
                 ingredient["ingredient_id"]
             )
+
+            if not ing_data:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Ingredient with ID {ingredient['ingredient_id']} not found",
+                )
 
             quantity = ingredient["quantity"]
             calories = (ing_data["calories_per_100g"] / 100) * quantity
@@ -146,7 +159,7 @@ class RecipeService:
 
         return await self.get_recipe(str(result.inserted_id))
 
-    async def get_recipe_with_subtitutes(
+    async def get_recipe_with_substitutes(
         self,
         recipe_id: str,
         unavailable_ingredients: List[Dict[str, int]],
@@ -187,6 +200,11 @@ class RecipeService:
                     new_ing_data = await self.ingredient_service.get_ingredient(
                         substitute["substitute_ingredient_id"]
                     )
+
+                    if not new_ing_data:
+                        # Если замена почему-то не найдена в базе, пропускаем или падаем? 
+                        # Лучше пропустить этот вариант замены или вернуть ошибку.
+                        continue
 
                     quantity = new_ingredient["quantity"]
                     new_ingredient["calories"] = round(
@@ -250,7 +268,7 @@ class RecipeService:
 
             return await self.get_recipe(recipe_id)
 
-        except:
+        except Exception:
             return None
 
     async def delete_recipe(self, recipe_id: str) -> bool:
@@ -262,5 +280,5 @@ class RecipeService:
         try:
             result = await collection.delete_one({"_id": ObjectId(recipe_id)})
             return result.deleted_count > 0
-        except:
+        except Exception:
             return False
