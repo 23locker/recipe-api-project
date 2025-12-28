@@ -8,7 +8,6 @@ class Ingredient(Model):
     protein_per_100g = fields.FloatField()
     fat_per_100g = fields.FloatField()
     carbs_per_100g = fields.FloatField()
-    category = fields.ForeignKeyField("models.Category", related_name="ingredients")
     created_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:

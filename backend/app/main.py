@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 
-from app.api.v1 import admin, auth, category, ingredients, recipes
+from app.api.v1 import admin, auth, category, ingredients, recipes, store
 from app.db.mongodb import close_mongodb, init_mongodb
 from app.db.tortoise_config import TORTOISE_ORM, close_tortoise, init_tortoise
 
@@ -50,6 +50,7 @@ app.include_router(
 )
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 app.include_router(category.router, prefix="/api/v1/category", tags=["category"])
+app.include_router(store.router, prefix="/api/v1/store", tags=["store"])
 
 
 @app.get("/health")

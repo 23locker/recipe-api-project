@@ -1,7 +1,10 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.dependencies import get_admin_user
 from app.models.tortoise.user import User
+from app.services.task_service import task_service
 
 router = APIRouter()
 
@@ -10,13 +13,12 @@ router = APIRouter()
 async def parse_stores(current_user: User = Depends(get_admin_user)):
     """
     Запустить парсер магазина Пятерочка (только админ)
-
-    Временно - заглушка. Позже подключим реальный парсер.
     """
+    await task_service.publish_task("sync_store_prices", {})
     return {
         "status": "success",
         "message": "Parser started in background",
-        "timestamp": None,  # Пока не реализовано
+        "timestamp": datetime.utcnow().isoformat(),
     }
 
 

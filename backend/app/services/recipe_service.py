@@ -1,13 +1,14 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import HTTPException, status
 from bson import ObjectId
+from fastapi import HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
 
 from app.db.mongodb import get_mongodb
 from app.models.mongo.recipe import Recipe, RecipeIngredient, RecipeInstruction
 from app.services.ingredient_service import IngredientService
+from app.services.redis_service import redis_service
 
 
 class RecipeService:
@@ -35,6 +36,12 @@ class RecipeService:
         """
         Получить писок рецептов с пагинацией (cursor-based)
         """
+        # Try to get from cache
+        cache_key = f"recipes_list:{cursor}:{size}:{category_id}:{min_calories}:{max_calories}:{max_time}:{exclude_ingredients}"
+        cached_data = await redis_service.get(cache_key)
+        if cached_data:
+            return cached_data
+
         collection = await self._get_collection()
 
         filters = {}
@@ -80,22 +87,33 @@ class RecipeService:
         for recipe in recipes:
             recipe["id"] = str(recipe.pop("_id"))
 
-        return {
+        result = {
             "data": recipes,
             "next_cursor": next_cursor,
             "has_more": has_more,
         }
+        await redis_service.set(cache_key, result, expire=600)  # Cache for 10 minutes
+        return result
 
     async def get_recipe(self, recipe_id: str) -> Optional[dict]:
         """
         Берем рецепт по его ID
         """
+        # Try to get from cache
+        cache_key = f"recipe:{recipe_id}"
+        cached_recipe = await redis_service.get(cache_key)
+        if cached_recipe:
+            return cached_recipe
+
         collection = await self._get_collection()
 
         try:
             recipe = await collection.find_one({"_id": ObjectId(recipe_id)})
             if recipe:
                 recipe["id"] = str(recipe.pop("_id"))
+                await redis_service.set(
+                    cache_key, recipe, expire=3600
+                )  # Cache for 1 hour
             return recipe
         except Exception:
             return None
@@ -157,6 +175,9 @@ class RecipeService:
 
         result = await collection.insert_one(recipe_dict)
 
+        # Invalidate list cache
+        await redis_service.delete_by_pattern("recipes_list:*")
+
         return await self.get_recipe(str(result.inserted_id))
 
     async def get_recipe_with_substitutes(
@@ -202,8 +223,6 @@ class RecipeService:
                     )
 
                     if not new_ing_data:
-                        # Если замена почему-то не найдена в базе, пропускаем или падаем? 
-                        # Лучше пропустить этот вариант замены или вернуть ошибку.
                         continue
 
                     quantity = new_ingredient["quantity"]
@@ -266,6 +285,10 @@ class RecipeService:
                 {"$set": recipe_data},
             )
 
+            # Invalidate cache
+            await redis_service.delete(f"recipe:{recipe_id}")
+            await redis_service.delete_by_pattern("recipes_list:*")
+
             return await self.get_recipe(recipe_id)
 
         except Exception:
@@ -279,6 +302,11 @@ class RecipeService:
 
         try:
             result = await collection.delete_one({"_id": ObjectId(recipe_id)})
-            return result.deleted_count > 0
+            if result.deleted_count > 0:
+                # Invalidate cache
+                await redis_service.delete(f"recipe:{recipe_id}")
+                await redis_service.delete_by_pattern("recipes_list:*")
+                return True
+            return False
         except Exception:
             return False

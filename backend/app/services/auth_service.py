@@ -14,7 +14,6 @@ class AuthService:
         Регистрация нового пользователя
         """
         try:
-            # Проверка на существование username или email
             existing_user = await User.filter(username=username).first()
             if existing_user:
                 return None
@@ -58,6 +57,7 @@ class AuthService:
                     "username": user.username,
                     "email": user.email,
                     "role": user.role,
+                    "created_at": user.created_at,
                 },
             }
         except DoesNotExist:

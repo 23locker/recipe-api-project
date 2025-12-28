@@ -21,7 +21,7 @@ services:
     environment:
       MONGO_INITDB_DATABASE: recipe_db_test
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongodb_data_test:/data/db
     healthcheck:
@@ -30,6 +30,28 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis_data_test:/data
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - rabbitmq_data_test:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data_test:
   mongodb_data_test:
+  redis_data_test:
+  rabbitmq_data_test:

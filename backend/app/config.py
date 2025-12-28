@@ -1,3 +1,4 @@
+import os
 from pydantic_settings import BaseSettings
 
 
@@ -15,13 +16,21 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     # Redis
-    REDIS_URL: str
+    REDIS_URL: str = "redis://localhost:6380/0"
+
+    # RabbitMQ
+    RABBITMQ_URL: str = "amqp://guest:guest@localhost:5672/"
 
     # env
-    ENV: str = "prod"
+    APP_ENV: str = "prod"
 
     class Config:
-        env_file = ".env"
+        @classmethod
+        def env_file(cls):
+            env = os.getenv("APP_ENV", "prod")
+            if env == "test":
+                return ".env.test"
+            return ".env"
 
 
 settings = Settings()
